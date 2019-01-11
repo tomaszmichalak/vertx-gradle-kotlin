@@ -9,7 +9,7 @@
 plugins {
     // Apply the java-library plugin to add support for Java Library
     id("java")
-    id("maven")
+    id("maven-publish")
 }
 
 repositories {
@@ -20,12 +20,16 @@ repositories {
 
 dependencies {
 
-    annotationProcessor("io.vertx:vertx-codegen:3.5.4")
-    compileOnly(group = "io.vertx", name = "vertx-codegen", version = "3.5.4")
-
     // This dependency is used internally, and not exposed to consumers on their own compile classpath.
-    compile("com.google.guava:guava:26.0-jre")
-    compile("io.vertx:vertx-core:3.5.4")
+    compile("io.vertx:vertx-core:3.6.2")
+    compile("io.vertx:vertx-service-proxy:3.6.2")
+    compile("io.vertx:vertx-rx-java2:3.6.2")
+
+    compileOnly("io.vertx:vertx-codegen:3.6.2")
+    annotationProcessor("io.vertx:vertx-rx-java2:3.6.2")
+    annotationProcessor("io.vertx:vertx-rx-java2-gen:3.6.2")
+    annotationProcessor("io.vertx:vertx-service-proxy:3.6.2")
+    annotationProcessor("io.vertx:vertx-codegen:3.6.2:processor")
 
     // Use JUnit test framework
     testCompile("junit:junit:4.12")
@@ -42,14 +46,17 @@ tasks.withType<JavaCompile>().configureEach {
 sourceSets {
     main {
         java {
-            setSrcDirs(listOf("src/main/java", "src/main/generated"))
-        }
-    }
-    test {
-        java {
-            setSrcDirs(listOf("src/test/java"))
+            setSrcDirs(listOf("/src/main/java", "src/main/generated"))
         }
     }
 }
 
-apply(from = "gradle/annotationProcessing.gradle.kts")
+tasks {
+    getByName<JavaCompile>("compileJava") {
+        options.annotationProcessorGeneratedSourcesDirectory = File("$projectDir/src/main/generated")
+    }
+
+    getByName<Delete>("clean") {
+        delete.add("src/main/generated")
+    }
+}
